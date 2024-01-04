@@ -1,8 +1,12 @@
 # Configure MongoDB
 
 from pymongo import MongoClient
+import os
+from dotenv import load_dotenv
 
-client = MongoClient.connect("mongodb+srv://amansingh203:IM1unO0VWnx4lmvG@cluster0.crbrqm8.mongodb.net/?retryWrites=true&w=majority")
+load_dotenv()
+MONGO_DB_URI = os.getenv('MONGO_DB_URI')
+client = MongoClient.connect(MONGO_DB_URI)
 db = client.todo_db
 
 collection_name = db["todo_collection"]
