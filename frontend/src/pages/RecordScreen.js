@@ -2,16 +2,13 @@ import React, { useState, useContext, useRef, useEffect } from "react";
 import { ClipContext } from "../context/ClipContext"
 import { DisplayContext } from "../context/DisplayContext"
 import axios from "axios"
-import { UserContext } from "../context/UserContext";
 
 export default function RecordScreen() {
   const {
 	setRecordings,
 	durations,
 	setDurations,
-  clipFormData
 } = useContext(ClipContext)
-//const { currentUser } = useContext(UserContext);
 const { speechPattern } = useContext(DisplayContext);
 const [transcript, setTranscript] = useState("");
 const [permission, setPermission] = useState(false);
@@ -19,9 +16,11 @@ const mediaRecorder = useRef(null);
 const [recordingStatus, setRecordingStatus] = useState("inactive");
 const [stream, setStream] = useState(null);
 const [audio, setAudio] = useState(null);
+const [audioFile, setAudioFile] = useState(null);
 const [clipDuration, setClipDuration] = useState(durations)
 const [audioChunks, setAudioChunks] = useState([]);
-const mimeType = "audio/mp4";
+const [globalBlob, setGlobalBlob] = useState(null);
+const mimeType = "audio/wav";
 const intervalRef = useRef(null);
 const host = "http://localhost:8000"
 
@@ -79,9 +78,14 @@ const getMicrophonePermission = async () => {
 		mediaRecorder.current.stop();
 		mediaRecorder.current.onstop = () => {
 			const audioBlob = new Blob(audioChunks, { type: mimeType });
+      const file = new File([audioBlob], "audiofile.wav", {
+        type: "audio/wav",
+      });
 			const audioUrl = URL.createObjectURL(audioBlob);
-      clipFormData.append('audioFile', audioBlob, 'audio.wav');
+      //clipFormData.append('audioFile', audioBlob, 'audio.wav');
 			setAudio(audioUrl);
+      setAudioFile(file);
+      setGlobalBlob(audioBlob);
       clearInterval(intervalRef.current);
       setAudioChunks([]);
       setDurations(clipDuration);
@@ -100,16 +104,20 @@ const getMicrophonePermission = async () => {
 			}
 		console.log(clipData);
 		try {
-			await axios.post(host + "/clips/upload", clipData, 
+      const clipFormData = new FormData();
+      clipFormData.append("audio", audioFile);
+      clipFormData.append("speech_pattern", speechPattern);
+      clipFormData.append("durations", durations);
+			await axios.post(host + "/clips/upload", clipFormData, 
       {
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'multipart/form-data'
         }
       })
             .then(res=>{
                 if(res.status === 200){
                   console.log("Clip successfully uploaded")
-                  console.log(res.data)
+                  console.log(res)
                   setTranscript(res.data);
               }
                 else if(res.status===400){

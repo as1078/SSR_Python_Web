@@ -10,7 +10,6 @@ function ClipContextProvider({ children }) {
 	const [currentTranscriptIds, setCurrentTranscriptIds] = useState(null)
 	const [recordings, setRecordings] = useState(new Blob())
 	const [durations, setDurations] = useState(0)
-	const clipFormData = new FormData();
 
 	const stateVariables = {
 		transcripts,
@@ -20,7 +19,6 @@ function ClipContextProvider({ children }) {
 		currentTranscriptIds,
 		recordings,
 		durations,
-		clipFormData,
 	}
 	const stateFunctions = {
 		setTranscripts,
