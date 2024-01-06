@@ -5,10 +5,11 @@ from starlette.responses import JSONResponse
 from whisper import Whisper
 import os
 import subprocess
+import time
 
 
 whisper = Whisper()
-#connect_mongo()
+connect_mongo()
 origins = ["http://localhost:3000"]
 app = FastAPI()
 app.add_middleware(
@@ -50,14 +51,15 @@ def transcribe_audio(
     if file_size == 0:
         return JSONResponse(content={"error": "File is empty"}, status_code=400)
     
-    file_path = "/tmp/audiofile.mp3"
+    file_path = "/tmp/audiofile.wav"
 
     result = subprocess.run(["file", file_path], capture_output=True, text=True)
     file_type = result.stdout.strip()  # Remove trailing newline
     print("File type:", file_type)
 
+    timestamp = time.strftime("%Y%m%d_%H%M%S")
     webm_path = audio_path  # Replace with the actual path
-    wav_path =  "/tmp/audiofile2.wav" # Replace with the desired output path
+    wav_path =  f"/tmp/audiofile_{timestamp}.wav" # Replace with the desired output path
 
     try:
         subprocess.run(["ffmpeg", "-i", webm_path, wav_path], check=True)
@@ -66,18 +68,5 @@ def transcribe_audio(
         print("Conversion failed:", error)
 
 
-    # Check the file format
-    #array, sampling_rate = sf.read(wav_path)
-    
-
-    # Now you can proceed with transcription or further processing
-    
-    #return f.name
-
     text = whisper.obtain_transcript(wav_path)
     return text
-
-
-# if __name__ == '__main__':
-#     uvicorn.run(app, port=3000)
-
